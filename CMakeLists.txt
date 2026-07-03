@@ -1,0 +1,2 @@
+zephyr_library()
+zephyr_library_sources_ifdef(CONFIG_ZMK_LED_STRIP_INDICATOR src/led_strip_indicator.c)

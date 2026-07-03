@@ -1,0 +1,9 @@
+config ZMK_LED_STRIP_INDICATOR
+    bool "Connection-status indicator LED strip proxy"
+    default y
+    depends on DT_HAS_ZMK_LED_STRIP_INDICATOR_ENABLED
+    help
+      A led_strip proxy that ZMK underglow writes to (chosen zmk,underglow).
+      On an endpoint (central or non-split) it overrides one pixel with a color
+      for the current USB/BLE endpoint, then forwards to the real strip. On a
+      split peripheral it just forwards untouched.
