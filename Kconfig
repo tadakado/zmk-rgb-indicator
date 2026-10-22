@@ -8,6 +8,18 @@ config ZMK_LED_STRIP_INDICATOR
       for the current USB/BLE endpoint, then forwards to the real strip. On a
       split peripheral it just forwards untouched.
 
+config ZMK_LED_STRIP_INDICATOR_REFRESH_MS
+    int "Re-send the last frame every this many ms (0 = never)"
+    depends on ZMK_LED_STRIP_INDICATOR
+    default 2000
+    help
+      WS2812 pixels hold their color until new data arrives, so if the strip
+      gets glitched (e.g. data-line noise or a supply dip when the radio gets
+      busy, such as a split half reconnecting) it stays wrong -- notably while
+      underglow is off and nothing else writes to it. Periodically re-send the
+      cached frame (with the indicator pixel) so it recovers on its own. A
+      refresh is also sent shortly after every BLE connect / disconnect.
+
 config ZMK_LED_STRIP_INDICATOR_TRACE
     bool "Log every frame forwarded to the strip (debug)"
     depends on ZMK_LED_STRIP_INDICATOR

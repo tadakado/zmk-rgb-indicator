@@ -103,6 +103,16 @@ project unconditionally.
 - `profile-colors` may hold as many entries as you have BLE profiles; extras are
   ignored and missing ones show off.
 
+## Glitch recovery
+
+WS2812 pixels hold their color until new data arrives, so a strip glitched by
+data-line noise or a supply dip (seen on a split central when the other half
+reconnects and the radio gets busy) would stay wrong while underglow is off.
+The module therefore re-sends the cached frame shortly after every BLE
+connect / disconnect and every `CONFIG_ZMK_LED_STRIP_INDICATOR_REFRESH_MS`
+(default 2000 ms; 0 disables the periodic refresh).
+`CONFIG_ZMK_LED_STRIP_INDICATOR_TRACE=y` logs every frame sent (debug).
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
