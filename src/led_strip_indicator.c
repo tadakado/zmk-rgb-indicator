@@ -85,6 +85,10 @@ static int forward_frame(const struct device *dev, const char *why) {
     struct ind_data *data = dev->data;
     int ret;
 
+    if (!device_is_ready(cfg->target)) {
+        return -ENODEV;
+    }
+
     k_mutex_lock(&data->lock, K_FOREVER);
 #if INDICATOR_ENABLED
     if (cfg->index < data->cache_len) {
@@ -142,9 +146,11 @@ static int ind_init(const struct device *dev) {
     // just make its whole length valid.
     data->cache_len = cfg->length;
 
+    // The target strip has the same init priority, so it may not be up yet;
+    // that's fine -- forward_frame() checks it on every use. Failing here would
+    // mark this device not-ready for good.
     if (!device_is_ready(cfg->target)) {
-        LOG_ERR("target LED strip not ready");
-        return -ENODEV;
+        LOG_DBG("target LED strip not ready yet");
     }
 #if INDICATOR_ENABLED
     if (cfg->index >= cfg->length) {
@@ -188,9 +194,7 @@ static const struct device *const ind_devices[] = {
 
 static void forward_all(const char *why) {
     for (size_t i = 0; i < ARRAY_SIZE(ind_devices); i++) {
-        if (device_is_ready(ind_devices[i])) {
-            (void)forward_frame(ind_devices[i], why);
-        }
+        (void)forward_frame(ind_devices[i], why);
     }
 }
 
