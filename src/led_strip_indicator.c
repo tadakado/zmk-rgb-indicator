@@ -76,7 +76,8 @@ static struct led_rgb indicator_color(const struct ind_config *cfg) {
 #endif
 
 // Overlay the indicator pixel on the cached frame and push it to the real strip.
-static int forward_frame(const struct device *dev) {
+// `why` only labels the debug trace.
+static int forward_frame(const struct device *dev, const char *why) {
     const struct ind_config *cfg = dev->config;
     struct ind_data *data = dev->data;
     int ret;
@@ -88,6 +89,25 @@ static int forward_frame(const struct device *dev) {
     }
 #endif
     ret = led_strip_update_rgb(cfg->target, data->cache, data->cache_len);
+#if IS_ENABLED(CONFIG_ZMK_LED_STRIP_INDICATOR_TRACE)
+    {
+        struct led_rgb px = cfg->index < data->cache_len ? data->cache[cfg->index]
+                                                          : (struct led_rgb){0};
+#if INDICATOR_ENABLED
+        struct zmk_endpoint_instance ep = zmk_endpoint_get_selected();
+        int prof = -1;
+#if IS_ENABLED(CONFIG_ZMK_BLE)
+        prof = zmk_ble_active_profile_index();
+#endif
+        LOG_INF("fwd(%s) px%u=%02x%02x%02x len=%u ep.transport=%d prof=%d ret=%d", why,
+                (unsigned)cfg->index, px.r, px.g, px.b, (unsigned)data->cache_len,
+                (int)ep.transport, prof, ret);
+#else
+        LOG_INF("fwd(%s) px%u=%02x%02x%02x len=%u ret=%d", why, (unsigned)cfg->index, px.r,
+                px.g, px.b, (unsigned)data->cache_len, ret);
+#endif
+    }
+#endif
     k_mutex_unlock(&data->lock);
     return ret;
 }
@@ -102,7 +122,7 @@ static int ind_update_rgb(const struct device *dev, struct led_rgb *pixels, size
     data->cache_len = n;
     k_mutex_unlock(&data->lock);
 
-    return forward_frame(dev);
+    return forward_frame(dev, "frame");
 }
 
 static size_t ind_length(const struct device *dev) {
@@ -168,7 +188,7 @@ static const struct device *const ind_devices[] = {
 static int indicator_endpoint_listener(const zmk_event_t *eh) {
     ARG_UNUSED(eh);
     for (size_t i = 0; i < ARRAY_SIZE(ind_devices); i++) {
-        (void)forward_frame(ind_devices[i]);
+        (void)forward_frame(ind_devices[i], "event");
     }
     return ZMK_EV_EVENT_BUBBLE;
 }

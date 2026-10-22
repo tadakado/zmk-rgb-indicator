@@ -7,3 +7,12 @@ config ZMK_LED_STRIP_INDICATOR
       On an endpoint (central or non-split) it overrides one pixel with a color
       for the current USB/BLE endpoint, then forwards to the real strip. On a
       split peripheral it just forwards untouched.
+
+config ZMK_LED_STRIP_INDICATOR_TRACE
+    bool "Log every frame forwarded to the strip (debug)"
+    depends on ZMK_LED_STRIP_INDICATOR
+    help
+      Log each forward to the real strip: what triggered it (underglow frame or
+      endpoint/profile event), the indicator pixel color sent, the endpoint seen
+      and the led_strip_update_rgb() result. For chasing an indicator that
+      blanks unexpectedly.
